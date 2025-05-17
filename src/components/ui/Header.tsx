@@ -11,7 +11,7 @@ export default function Header() {
             <div className="absolute -inset-1 bg-purple-300/30 rounded-full blur-sm -z-10"></div>
           </div>
           <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-600 via-fuchsia-500 to-blue-500 text-transparent bg-clip-text">
-            ChatDefi
+            ChatDeFi
           </h1>
         </div>
         <div className="flex items-center gap-3">

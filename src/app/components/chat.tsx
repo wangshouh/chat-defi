@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { getDeFiProtocol } from "@/lib/dispatcher";
 import { RefreshCw, Send, Sparkles } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Markdown from "react-markdown";
 import { useAccount } from "wagmi";
 
@@ -41,6 +41,10 @@ export function Chat() {
     // 调用消息处理函数
     messagesHandler(input);
   };
+
+  const handleExampleClicked = useCallback((example: string) => {
+    messagesHandler(example);
+  }, []);
 
   const messagesHandler = async (message: string) => {
     setIsLoading(true);
@@ -108,18 +112,22 @@ export function Chat() {
                   <div className="absolute -inset-4 bg-purple-300/20 rounded-full blur-md -z-10 animate-pulse"></div>
                 </div>
                 <h2 className="text-2xl font-semibold mb-3 text-slate-800 dark:text-slate-200">
-                  Welcome to ChatDefi!
+                  Welcome to ChatDeFi!
                 </h2>
-                <p className="text-slate-600 dark:text-slate-400 max-w-md">
+                {/* <p className="text-slate-600 dark:text-slate-400 max-w-md">
                   Your intelligent conversation partner. Ask me anything to get
                   started!
-                </p>
-                <div className="mt-6 grid grid-cols-2 gap-2 max-w-md">
-                  <div className="bg-purple-50 dark:bg-purple-900/30 p-3 rounded-lg text-sm text-slate-700 dark:text-slate-300 cursor-pointer hover:bg-purple-100 dark:hover:bg-purple-900/50 transition-colors border border-purple-200 dark:border-purple-800/30">
-                    "Explain quantum computing"
-                  </div>
-                  <div className="bg-purple-50 dark:bg-purple-900/30 p-3 rounded-lg text-sm text-slate-700 dark:text-slate-300 cursor-pointer hover:bg-purple-100 dark:hover:bg-purple-900/50 transition-colors border border-purple-200 dark:border-purple-800/30">
-                    "Write a short poem"
+                </p> */}
+                <div className="mt-6 grid grid-cols-1 gap-2 max-w-md">
+                  <div
+                    className="bg-purple-50 dark:bg-purple-900/30 p-3 rounded-lg text-sm text-slate-700 dark:text-slate-300 cursor-pointer hover:bg-purple-100 dark:hover:bg-purple-900/50 transition-colors border border-purple-200 dark:border-purple-800/30"
+                    onClick={() =>
+                      handleExampleClicked(
+                        "我希望向 Morpho 协议中的金库提供 USDC 资产"
+                      )
+                    }
+                  >
+                    "我希望向 Morpho 协议中的金库提供 USDC 资产"
                   </div>
                 </div>
               </div>
