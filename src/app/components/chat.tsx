@@ -31,10 +31,10 @@ export function Chat() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!input.trim()) return;
-        // if(account.status !== 'connected') {
-        //     setError(new Error('请先连接钱包'));
-        //     return
-        // }
+        if(account.status !== 'connected') {
+            setError(new Error('Please connect the wallet first'));
+            return
+        }
         // 调用消息处理函数
         messagesHandler(input);
     };
