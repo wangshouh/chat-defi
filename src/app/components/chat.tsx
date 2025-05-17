@@ -9,17 +9,51 @@ import { RefreshCw, Send, Sparkles } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 export function Chat() {
-  const {
-    messages,
-    input,
-    handleInputChange,
-    handleSubmit,
-    isLoading,
-    error,
-    reload,
-  } = useChat();
-  const chatParent = useRef<HTMLUListElement>(null);
-  const [showError, setShowError] = useState<boolean>(false);
+
+  // 聊天消息
+    const [messages, setMessages] = useState<{ role: 'user' | 'assistant', content: string }[]>([]);
+    // 输入框内容
+    const [input, setInput] = useState('');
+    // 是否加载中
+    const [isLoading, setIsLoading] = useState(false);
+    // 错误对象
+    const [error, setError] = useState<Error | null>(null);
+
+    const chatParent = useRef<HTMLUListElement>(null)
+    const [showError, setShowError] = useState<boolean>(false);
+
+    // 输入框变化
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setInput(e.target.value);
+    };
+
+    // 提交表单
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!input.trim()) return;
+        messagesHandler(input);
+    };
+
+    const messagesHandler = async (message: string) => {
+        setIsLoading(true);
+        setMessages(prev => [...prev, { role: 'user', content: message }]);
+        try {
+            // 调用客户端API 获取数据
+            setMessages(prev => [...prev, { role: 'assistant', content: message }]);
+            setInput('');
+        } catch (err: any) {
+            setError(err);
+        } finally {
+            setIsLoading(false);
+        }
+    }
+
+    // 重新加载（重发最后一条用户消息）
+    const reload = async () => {
+        const lastUserMsg = [...messages].reverse().find(m => m.role === 'user');
+        if (!lastUserMsg) return;
+        messagesHandler(lastUserMsg.content);
+    };
 
   useEffect(() => {
     const domNode = chatParent.current;
@@ -47,7 +81,7 @@ export function Chat() {
               <div className="absolute -inset-1 bg-purple-300/30 rounded-full blur-sm -z-10"></div>
             </div>
             <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-600 via-fuchsia-500 to-blue-500 text-transparent bg-clip-text">
-              SparkAI
+              ChatDefi
             </h1>
           </div>
           <div className="flex items-center gap-3">
@@ -78,7 +112,7 @@ export function Chat() {
                   <div className="absolute -inset-4 bg-purple-300/20 rounded-full blur-md -z-10 animate-pulse"></div>
                 </div>
                 <h2 className="text-2xl font-semibold mb-3 text-slate-800 dark:text-slate-200">
-                  Welcome to SparkAI
+                  Welcome to ChatDefi!
                 </h2>
                 <p className="text-slate-600 dark:text-slate-400 max-w-md">
                   Your intelligent conversation partner. Ask me anything to get

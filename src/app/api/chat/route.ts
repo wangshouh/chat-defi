@@ -27,7 +27,7 @@ export async function POST(req: Request) {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
                 'HTTP-Referer': process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
-                'X-Title': 'SparkAI Chat'
+                'X-Title': 'ChatDefi Chat'
             },
             body: JSON.stringify({
                 model: 'openai/gpt-3.5-turbo', // You can change this to any model supported by OpenRouter
