@@ -2,7 +2,11 @@ import { generateObject, generateText } from "ai";
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 import { env } from "bun";
 import { z } from "zod";
-import type { Address } from "viem";
+import { encodeFunctionData, parseUnits, type Address } from "viem";
+import { USDC, USDCAbi } from "../../abi/USDCAbi";
+import { MORPHO } from "../../config";
+import type { Call3 } from "../type";
+import { morpho, morphoAbi } from "../../abi/morphoAbi";
 
 const openrouter = createOpenRouter({
   apiKey: env.OPEN_ROUTER_KEY,
@@ -48,6 +52,52 @@ export const describeMarket = async (marketData: Item[]) => {
 
   console.log(`AI >:\n ${text}`);
 };
+
+export const generateCalldata = async (
+  uniqueKey: `0x${string}`,
+  amount: string,
+  walletAddress: Address,
+) => {
+  const call3s = [] as Call3[];
+
+  const depositAmount = parseUnits(amount, 6);
+  const usdcAllowance = await USDC.read.allowance([walletAddress, MORPHO]);
+
+  if (usdcAllowance < depositAmount) {
+    const allowAction = encodeFunctionData({
+      abi: USDCAbi,
+      functionName: "approve",
+      args: [MORPHO, depositAmount],
+    });
+    call3s[0] = {
+      target: USDC.address,
+      allowFailure: false,
+      callData: allowAction,
+    };
+  }
+
+  const marketParams = await morpho.read.idToMarketParams([uniqueKey]);
+
+  const supplyAction = encodeFunctionData({
+    abi: morphoAbi,
+    functionName: "supply",
+    args: [marketParams, depositAmount, 0n, walletAddress, "0x"],
+  });
+
+  call3s[1] = {
+    target: morpho.address,
+    allowFailure: false,
+    callData: supplyAction,
+  };
+
+  return call3s;
+};
+
+export const calls = await generateCalldata(
+  "0xdb0bc9f10a174f29a345c5f30a719933f71ccea7a2a75a632a281929bba1b535",
+  "0.025",
+  "0x66c27effe528cd25e110d5a5f59538eccd6e7728",
+);
 
 // const marketData = await getMorphoMarketByColletral();
 // await describeMarket(marketData);
