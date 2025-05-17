@@ -1,7 +1,7 @@
 import { FLASH_MODEL } from "@/lib/openrouter";
 import { generateText } from "ai";
 
-const describeActions = async (actions: string[]) => {
+export const describeActions = async (actions: string[]) => {
   const { text } = await generateText({
     model: FLASH_MODEL,
     prompt:
@@ -12,4 +12,4 @@ const describeActions = async (actions: string[]) => {
   return text;
 };
 
-console.log(await describeActions(["1inch::swap", "morpho::supply"]));
+// console.log(await describeActions(["1inch::swap", "morpho::supply"]));

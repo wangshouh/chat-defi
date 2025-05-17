@@ -1,5 +1,6 @@
 import { generateObject } from "ai";
 
+import { describeActions } from "@/actions/actionDescribe";
 import { z } from "zod";
 import { DEFAULT_MODEL } from "./openrouter";
 
@@ -35,7 +36,10 @@ export const getDeFiProtocol = async (input: string) => {
   //     }
   //   }
   // });
-  return { actions };
+
+  const describeActionsText = await describeActions(actions.actions);
+
+  return { actions, describeActionsText };
 };
 
 // console.log(
