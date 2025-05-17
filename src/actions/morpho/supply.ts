@@ -47,6 +47,20 @@ export const describeMarket = async (marketData: Item[]) => {
   console.log(`AI >:\n ${text}`);
 };
 
+/**
+ * 链式获取 Morpho 市场数据并生成描述
+ * @returns Promise<void>
+ */
+export const getAndDescribeMorphoMarkets = async (): Promise<void> => {
+  try {
+    const marketData = await getMorphoMarketByColletral();
+    await describeMarket(marketData);
+  } catch (error) {
+    console.error('Failed to fetch and describe Morpho markets:', error);
+    throw error;
+  }
+};
+
 export const generateCalldata = async (
   uniqueKey: `0x${string}`,
   amount: string,
