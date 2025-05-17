@@ -4,13 +4,13 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
-import { useChat } from "ai/react";
 import { RefreshCw, Send, Sparkles } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-
+import { useAccount } from 'wagmi'
+import { getDeFiProtocol } from "@/lib/dispatcher";
 export function Chat() {
-
-  // 聊天消息
+    const account = useAccount()
+    // 聊天消息
     const [messages, setMessages] = useState<{ role: 'user' | 'assistant', content: string }[]>([]);
     // 输入框内容
     const [input, setInput] = useState('');
@@ -31,6 +31,11 @@ export function Chat() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!input.trim()) return;
+        // if(account.status !== 'connected') {
+        //     setError(new Error('请先连接钱包'));
+        //     return
+        // }
+        // 调用消息处理函数
         messagesHandler(input);
     };
 
@@ -40,6 +45,8 @@ export function Chat() {
         try {
             // 调用客户端API 获取数据
             setMessages(prev => [...prev, { role: 'assistant', content: message }]);
+            const atcion =  await getDeFiProtocol(message)
+            console.log(atcion)
             setInput('');
         } catch (err: any) {
             setError(err);
@@ -71,8 +78,8 @@ export function Chat() {
   }, [error]);
 
   return (
-    <main className="flex flex-col w-full min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 dark:from-slate-900 dark:via-purple-900/20 dark:to-slate-800">
-      {/* Header with upgraded gradient and logo */}
+    <main className="flex flex-col w-full h-screen relative bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 dark:from-slate-900 dark:via-purple-900/20 dark:to-slate-800">
+    {/* Header with upgraded gradient and logo */}
       <header className="sticky top-0 z-10 backdrop-blur-md bg-white/75 dark:bg-slate-900/75 border-b border-slate-200 dark:border-slate-700 shadow-sm">
         <div className="max-w-4xl mx-auto p-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -99,12 +106,13 @@ export function Chat() {
       )}
 
       {/* Chat messages area */}
-      <section className="flex-grow px-4 py-6">
+      <section className="flex-1 px-4 py-6 overflow-hidden">
         <div className="max-w-4xl mx-auto h-full flex flex-col">
+
           <ul
             ref={chatParent}
-            className="flex-grow mb-4 p-4 bg-white/80 dark:bg-slate-800/70 backdrop-blur-sm rounded-lg shadow-lg border border-purple-100 dark:border-purple-900/30 overflow-y-auto flex flex-col gap-6"
-          >
+            className="flex-1 mb-4 p-4 bg-white/80 dark:bg-slate-800/70 backdrop-blur-sm rounded-lg shadow-lg border border-purple-100 dark:border-purple-900/30 overflow-y-auto"
+            >
             {messages.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-center p-8">
                 <div className="relative mb-6">
