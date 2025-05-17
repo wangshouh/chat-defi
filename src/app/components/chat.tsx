@@ -3,11 +3,13 @@
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { getDeFiProtocol } from "@/lib/dispatcher";
 import { RefreshCw, Send, Sparkles } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
-import Markdown from "react-markdown";
+import { useEffect, useRef, useState, useMemo } from "react";
 import { useAccount } from "wagmi";
+import { MarkdownRenderer } from "@/components/ui/MarkdownRenderer";
+import { IntentRecognizer } from '@/lib/intentHandler';
+import { protocolIntent, marketIntent } from '@/lib/intents';
+
 
 export function Chat() {
   const account = useAccount();
@@ -42,18 +44,34 @@ export function Chat() {
     messagesHandler(input);
   };
 
+  // 创建意图识别器实例
+  const intentRecognizer = useMemo(() => {
+    const recognizer = new IntentRecognizer();
+    recognizer.registerIntent(protocolIntent);
+    recognizer.registerIntent(marketIntent);
+    return recognizer;
+  }, []);
+
   const messagesHandler = async (message: string) => {
     setIsLoading(true);
     setMessages((prev) => [...prev, { role: "user", content: message }]);
     try {
       // 调用客户端API 获取数据
-      // setMessages((prev) => [...prev, { role: "assistant", content: message }]);
-      const atcion = await getDeFiProtocol(message);
-      console.log(atcion);
-      setMessages((prev) => [
-        ...prev,
-        { role: "assistant", content: atcion.describeActionsText },
-      ]);
+    const intent = await intentRecognizer.analyzeIntent(message);
+    if (!intent) {
+      throw new Error("抱歉，我无法理解您的请求。请换个方式提问。");
+    }
+    
+    const response = await intent.handler(message);
+    if (!response) {
+      throw new Error("处理请求时发生错误");
+    }
+    
+    setMessages((prev) => [
+      ...prev,
+      { role: "assistant", content: response },
+    ]);
+      
       setInput("");
     } catch (err: any) {
       setError(err);
@@ -142,14 +160,18 @@ export function Chat() {
                                         `}
                   >
                     <p
-                      className={`whitespace-pre-wrap ${
-                        m.role === "user"
-                          ? "text-white"
-                          : "text-slate-800 dark:text-slate-100"
-                      }`}
-                    >
-                      <Markdown>{m.content}</Markdown>
-                    </p>
+                        className={`whitespace-pre-wrap ${
+                            m.role === "user"
+                            ? "text-white"
+                            : "text-slate-800 dark:text-slate-100"
+                        }`}
+                        >
+                        {m.role === 'assistant' ? (
+                            <MarkdownRenderer content={m.content} />
+                        ) : (
+                            m.content
+                        )}
+                        </p>
                   </div>
                 </li>
               ))

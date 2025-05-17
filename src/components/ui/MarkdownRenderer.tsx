@@ -9,7 +9,6 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
   return (
     <ReactMarkdown
       remarkPlugins={[remarkGfm]}
-      className="prose prose-sm dark:prose-invert max-w-none"
       components={{
         // 定制 Markdown 元素样式
         h1: ({...props}) => (
@@ -26,9 +25,6 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
         ),
         ol: ({...props}) => (
           <ol className="list-decimal pl-4 my-2" {...props} />
-        ),
-        code: ({inline, ...props}) => (
-          <code className={`${inline ? 'bg-gray-100 dark:bg-gray-800 px-1 rounded' : 'block bg-gray-100 dark:bg-gray-800 p-2 rounded'}`} {...props} />
         ),
         table: ({...props}) => (
           <div className="overflow-x-auto">

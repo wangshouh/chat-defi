@@ -45,16 +45,18 @@ export const describeMarket = async (marketData: Item[]) => {
   });
 
   console.log(`AI >:\n ${text}`);
+  return text;
 };
 
 /**
  * 链式获取 Morpho 市场数据并生成描述
  * @returns Promise<void>
  */
-export const getAndDescribeMorphoMarkets = async (): Promise<void> => {
+export const getAndDescribeMorphoMarkets = async () => {
   try {
     const marketData = await getMorphoMarketByColletral();
-    await describeMarket(marketData);
+    const data = describeMarket(marketData);
+    return data;
   } catch (error) {
     console.error('Failed to fetch and describe Morpho markets:', error);
     throw error;
@@ -101,11 +103,16 @@ export const generateCalldata = async (
   return call3s;
 };
 
-export const calls = await generateCalldata(
-  "0xdb0bc9f10a174f29a345c5f30a719933f71ccea7a2a75a632a281929bba1b535",
-  "0.025",
-  "0x66c27effe528cd25e110d5a5f59538eccd6e7728"
-);
+export async function generateExampleCalls() {
+  return await generateCalldata(
+    "0xdb0bc9f10a174f29a345c5f30a719933f71ccea7a2a75a632a281929bba1b535",
+    "0.025",
+    "0x66c27effe528cd25e110d5a5f59538eccd6e7728"
+  );
+}
 
-// const marketData = await getMorphoMarketByColletral();
-// await describeMarket(marketData);
+// 如果需要测试市场数据，也封装成函数
+export async function testMarketData() {
+  const marketData = await getMorphoMarketByColletral();
+  return await describeMarket(marketData);
+}

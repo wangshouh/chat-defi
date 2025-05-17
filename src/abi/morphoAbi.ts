@@ -1,5 +1,5 @@
 import { getContract } from "viem";
-import { publicClient } from "../config";
+import { publicClient } from "./config";
 
 export const morphoAbi = [
   {
