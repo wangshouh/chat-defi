@@ -1,13 +1,15 @@
+import "@rainbow-me/rainbowkit/styles.css";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import "./globals.css";
 import { ThemeProvider } from "./components/theme-provider";
+import "./globals.css";
+import Providers from "./providers";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "SparkAI - Intelligent Chat",
-  description: "An AI-powered chat experience",
+  title: "Chat-DeFi",
+  description: "An AI-powered DeFi Decision Making Assistant",
 };
 
 export default function RootLayout({
@@ -18,9 +20,11 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          {children}
-        </ThemeProvider>
+        <Providers>
+          <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+            {children}
+          </ThemeProvider>
+        </Providers>
       </body>
     </html>
   );
