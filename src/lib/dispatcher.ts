@@ -20,7 +20,7 @@ export const getDeFiProtocol = async (input: string) => {
         ])
         .array(),
     }),
-    prompt: `Evaluate the actions required to execute the transaction requested by the user and output them in order: ${input}`,
+    prompt: `Evaluate the actions required to execute the transaction requested by the user and output them in order: ${input},`,
   });
 
   // actions.actions.map((action) => {
