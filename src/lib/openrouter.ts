@@ -5,3 +5,5 @@ export const openrouter = createOpenRouter({
 });
 
 export const DEFAULT_MODEL = openrouter("google/gemini-2.5-pro-preview");
+
+export const FLASH_MODEL = openrouter("google/gemini-2.5-flash-preview");

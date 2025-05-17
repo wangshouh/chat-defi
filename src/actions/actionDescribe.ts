@@ -1,16 +1,9 @@
-import { createOpenRouter } from "@openrouter/ai-sdk-provider";
+import { FLASH_MODEL } from "@/lib/openrouter";
 import { generateText } from "ai";
-import { env } from "bun";
-
-const openrouter = createOpenRouter({
-  apiKey: env.OPEN_ROUTER_KEY,
-});
 
 const describeActions = async (actions: string[]) => {
-  const generateModel = openrouter("google/gemini-2.5-flash-preview");
-
   const { text } = await generateText({
-    model: generateModel,
+    model: FLASH_MODEL,
     prompt:
       `The following array represents a series of DeFi operations. Please explain the specific meaning of these operations to users: \n` +
       `Actions: [${actions}]`,

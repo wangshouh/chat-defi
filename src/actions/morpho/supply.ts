@@ -1,15 +1,10 @@
 import { MORPHO } from "@/lib/config";
-import { createOpenRouter } from "@openrouter/ai-sdk-provider";
+import { FLASH_MODEL } from "@/lib/openrouter";
 import { generateText } from "ai";
-import { env } from "bun";
 import { encodeFunctionData, parseUnits, type Address } from "viem";
 import { morpho, morphoAbi } from "../../abi/morphoAbi";
 import { USDC, USDCAbi } from "../../abi/USDCAbi";
 import type { Call3 } from "../type";
-
-const openrouter = createOpenRouter({
-  apiKey: env.OPEN_ROUTER_KEY,
-});
 
 export interface Item {
   uniqueKey: string;
@@ -41,7 +36,7 @@ export const getMorphoMarketByColletral = async () => {
 };
 
 export const describeMarket = async (marketData: Item[]) => {
-  const model = openrouter("google/gemini-2.5-flash-preview");
+  const model = FLASH_MODEL;
   const { text } = await generateText({
     model,
     prompt:
