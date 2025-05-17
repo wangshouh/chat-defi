@@ -3,64 +3,71 @@
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ConnectButton } from "@rainbow-me/rainbowkit";
+import { getDeFiProtocol } from "@/lib/dispatcher";
 import { RefreshCw, Send, Sparkles } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { useAccount } from 'wagmi'
-import { getDeFiProtocol } from "@/lib/dispatcher";
+import Markdown from "react-markdown";
+import { useAccount } from "wagmi";
+
 export function Chat() {
-    const account = useAccount()
-    // 聊天消息
-    const [messages, setMessages] = useState<{ role: 'user' | 'assistant', content: string }[]>([]);
-    // 输入框内容
-    const [input, setInput] = useState('');
-    // 是否加载中
-    const [isLoading, setIsLoading] = useState(false);
-    // 错误对象
-    const [error, setError] = useState<Error | null>(null);
+  const account = useAccount();
+  // 聊天消息
+  const [messages, setMessages] = useState<
+    { role: "user" | "assistant"; content: string }[]
+  >([]);
+  // 输入框内容
+  const [input, setInput] = useState("");
+  // 是否加载中
+  const [isLoading, setIsLoading] = useState(false);
+  // 错误对象
+  const [error, setError] = useState<Error | null>(null);
 
-    const chatParent = useRef<HTMLUListElement>(null)
-    const [showError, setShowError] = useState<boolean>(false);
+  const chatParent = useRef<HTMLUListElement>(null);
+  const [showError, setShowError] = useState<boolean>(false);
 
-    // 输入框变化
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setInput(e.target.value);
-    };
+  // 输入框变化
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInput(e.target.value);
+  };
 
-    // 提交表单
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!input.trim()) return;
-        if(account.status !== 'connected') {
-            setError(new Error('Please connect the wallet first'));
-            return
-        }
-        // 调用消息处理函数
-        messagesHandler(input);
-    };
-
-    const messagesHandler = async (message: string) => {
-        setIsLoading(true);
-        setMessages(prev => [...prev, { role: 'user', content: message }]);
-        try {
-            // 调用客户端API 获取数据
-            setMessages(prev => [...prev, { role: 'assistant', content: message }]);
-            const atcion =  await getDeFiProtocol(message)
-            console.log(atcion)
-            setInput('');
-        } catch (err: any) {
-            setError(err);
-        } finally {
-            setIsLoading(false);
-        }
+  // 提交表单
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!input.trim()) return;
+    if (account.status !== "connected") {
+      setError(new Error("Please connect the wallet first"));
+      return;
     }
+    // 调用消息处理函数
+    messagesHandler(input);
+  };
 
-    // 重新加载（重发最后一条用户消息）
-    const reload = async () => {
-        const lastUserMsg = [...messages].reverse().find(m => m.role === 'user');
-        if (!lastUserMsg) return;
-        messagesHandler(lastUserMsg.content);
-    };
+  const messagesHandler = async (message: string) => {
+    setIsLoading(true);
+    setMessages((prev) => [...prev, { role: "user", content: message }]);
+    try {
+      // 调用客户端API 获取数据
+      // setMessages((prev) => [...prev, { role: "assistant", content: message }]);
+      const atcion = await getDeFiProtocol(message);
+      console.log(atcion);
+      setMessages((prev) => [
+        ...prev,
+        { role: "assistant", content: atcion.describeActionsText },
+      ]);
+      setInput("");
+    } catch (err: any) {
+      setError(err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // 重新加载（重发最后一条用户消息）
+  const reload = async () => {
+    const lastUserMsg = [...messages].reverse().find((m) => m.role === "user");
+    if (!lastUserMsg) return;
+    messagesHandler(lastUserMsg.content);
+  };
 
   useEffect(() => {
     const domNode = chatParent.current;
@@ -78,25 +85,7 @@ export function Chat() {
   }, [error]);
 
   return (
-    <main className="flex flex-col w-full h-screen relative bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 dark:from-slate-900 dark:via-purple-900/20 dark:to-slate-800">
-    {/* Header with upgraded gradient and logo */}
-      <header className="sticky top-0 z-10 backdrop-blur-md bg-white/75 dark:bg-slate-900/75 border-b border-slate-200 dark:border-slate-700 shadow-sm">
-        <div className="max-w-4xl mx-auto p-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="relative">
-              <Sparkles className="h-6 w-6 text-purple-500 animate-pulse" />
-              <div className="absolute -inset-1 bg-purple-300/30 rounded-full blur-sm -z-10"></div>
-            </div>
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-600 via-fuchsia-500 to-blue-500 text-transparent bg-clip-text">
-              ChatDefi
-            </h1>
-          </div>
-          <div className="flex items-center gap-3">
-            <ConnectButton showBalance={false} />
-          </div>
-        </div>
-      </header>
-
+    <>
       {showError && (
         <Alert variant="destructive" className="w-full max-w-4xl mx-auto mt-2">
           <AlertDescription>
@@ -108,11 +97,10 @@ export function Chat() {
       {/* Chat messages area */}
       <section className="flex-1 px-4 py-6 overflow-hidden">
         <div className="max-w-4xl mx-auto h-full flex flex-col">
-
           <ul
             ref={chatParent}
             className="flex-1 mb-4 p-4 bg-white/80 dark:bg-slate-800/70 backdrop-blur-sm rounded-lg shadow-lg border border-purple-100 dark:border-purple-900/30 overflow-y-auto"
-            >
+          >
             {messages.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-center p-8">
                 <div className="relative mb-6">
@@ -144,7 +132,7 @@ export function Chat() {
                   }`}
                 >
                   <div
-                    className={`
+                    className={` mt-4
                                             max-w-[80%] rounded-2xl p-4 shadow-md
                                             ${
                                               m.role === "user"
@@ -160,7 +148,7 @@ export function Chat() {
                           : "text-slate-800 dark:text-slate-100"
                       }`}
                     >
-                      {m.content}
+                      <Markdown>{m.content}</Markdown>
                     </p>
                   </div>
                 </li>
@@ -225,6 +213,6 @@ export function Chat() {
           </div>
         </div>
       </section>
-    </main>
+    </>
   );
 }
