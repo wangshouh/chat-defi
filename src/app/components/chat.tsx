@@ -32,6 +32,7 @@ export function Chat() {
   const [showError, setShowError] = useState<boolean>(false);
 
 //   const { marketItems, setMarketItems } = useState<Item[]>([]);
+  const [currentUniqueKey, setCurrentUniqueKey] = useState<string | null>(null);
 
   // 输入框变化
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -56,6 +57,9 @@ export function Chat() {
   const handleMarketSelect = () => {
     console.log("Selected market:", market);
     // 这里添加选择市场后的逻辑
+    setCurrentUniqueKey(market.uniqueKey);
+    const marketDescription = `你选择的金额：0.01，请确认。`;
+    setInput(marketDescription);
   };
 
   return (
