@@ -1,16 +1,18 @@
 "use client";
 
-import { Item } from "@/actions/morpho/supply";
+import { generateCalldata, Item } from "@/actions/morpho/supply";
+import { Call3 } from "@/actions/type";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { MarkdownRenderer } from "@/components/ui/MarkdownRenderer";
 import { IntentRecognizer } from "@/lib/intentHandler";
 import { marketIntent, protocolIntent } from "@/lib/intents";
 import { RefreshCw, Send, Sparkles } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import ReactMarkdown from "react-markdown";
+import { Address, PublicClient } from "viem";
 import { useAccount, usePublicClient } from "wagmi";
-import ReactMarkdown from 'react-markdown'
+import CallContract from "./CallContract";
 
 export function Chat() {
   const account = useAccount();
@@ -19,8 +21,8 @@ export function Chat() {
 
   // 聊天消息
   const [messages, setMessages] = useState<
-  { role: "user" | "assistant"; content: string | React.ReactNode }[]
->([]);
+    { role: "user" | "assistant"; content: string | React.ReactNode }[]
+  >([]);
   // 输入框内容
   const [input, setInput] = useState("");
   // 是否加载中
@@ -31,7 +33,8 @@ export function Chat() {
   const chatParent = useRef<HTMLUListElement>(null);
   const [showError, setShowError] = useState<boolean>(false);
 
-//   const { marketItems, setMarketItems } = useState<Item[]>([]);
+  const [call3s, setCall3s] = useState<Call3[]>([]);
+  //   const { marketItems, setMarketItems } = useState<Item[]>([]);
 
   // 输入框变化
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -50,28 +53,36 @@ export function Chat() {
     messagesHandler(input);
   };
 
+  const MarketButton = ({ market }: { market: Item }) => {
+    const handleMarketSelect = () => {
+      console.log("Selected market:", JSON.stringify(market));
+      // 这里添加选择市场后的逻辑
+      finalStep(account.address!, market.uniqueKey as `0x${string}`, "0.001");
+    };
 
-
-    const MarketButton = ({ market }: { market: Item }) => {
-  const handleMarketSelect = () => {
-    console.log("Selected market:", market);
-    // 这里添加选择市场后的逻辑
+    return (
+      <Button
+        onClick={handleMarketSelect}
+        className="bg-purple-500 hover:bg-purple-600 text-white p-2 rounded"
+      >
+        选择此市场
+      </Button>
+    );
   };
 
-  return (
-    <Button 
-      onClick={handleMarketSelect}
-      className="bg-purple-500 hover:bg-purple-600 text-white p-2 rounded"
-    >
-      选择此市场
-    </Button>
-  );
-};
-
-
-    
-
-
+  const finalStep = async (
+    address: Address,
+    uniqueKey: `0x${string}`,
+    amount: string
+  ) => {
+    const call3s = await generateCalldata(
+      uniqueKey,
+      amount.toString(),
+      address,
+      publicClient as PublicClient
+    );
+    setCall3s(call3s);
+  };
 
   // 创建意图识别器实例
   const intentRecognizer = useMemo(() => {
@@ -84,51 +95,54 @@ export function Chat() {
     messagesHandler(example);
   }, []);
 
-    const handleStep = async (message: string, index: number) => {
-        switch (index) {
-            case 0:
-                const intent = await intentRecognizer.analyzeIntent(message);
-                if (!intent) {
-                    throw new Error("抱歉，我无法理解您的请求。请换个方式提问。");
-                }
-                const response = await intent.handler(message);
-                console.log("response:", response);
-                setMessages((prev) => [
-                    ...prev,
-                    { role: "assistant", content: response.describe },
-                ]);
-                const intent2 = await intentRecognizer.analyzeIntent("市场");
-                const response2 = await intent2?.handler("市场");
-                // setMarketItems(response2.data);
-
-                setMessages((prev) => [
-                    ...prev,
-                    { role: "assistant", content: response2.describe },
-                ]);
-                const marketListContent = response2.data.map((item: Item) => (
-                    <div key={item.uniqueKey} className="market-item mb-4 p-4 border rounded-lg">
-                        <h3 className="text-lg font-bold">{item.collateralAsset.name}</h3>
-                        <p>存款资产: {item.collateralAsset.name}</p>
-                        <MarketButton market={item} />
-                    </div>
-                    ));
-
-                setMessages((prev) => [
-                    ...prev,
-                    {
-                        role: "assistant",
-                        content: "## 可用市场列表\n请选择要操作的市场："
-                    },
-                    {
-                        role: "assistant",
-                        content: <div className="grid gap-4">{marketListContent}</div>
-                    }
-                    ]);
-                break;
-            default:
-                return "Unknown step";
+  const handleStep = async (message: string, index: number) => {
+    switch (index) {
+      case 0:
+        const intent = await intentRecognizer.analyzeIntent(message);
+        if (!intent) {
+          throw new Error("抱歉，我无法理解您的请求。请换个方式提问。");
         }
+        const response = await intent.handler(message);
+        console.log("response:", response);
+        setMessages((prev) => [
+          ...prev,
+          { role: "assistant", content: response.describe },
+        ]);
+        const intent2 = await intentRecognizer.analyzeIntent("市场");
+        const response2 = await intent2?.handler("市场");
+        // setMarketItems(response2.data);
+
+        setMessages((prev) => [
+          ...prev,
+          { role: "assistant", content: response2.describe },
+        ]);
+        const marketListContent = response2.data.map((item: Item) => (
+          <div
+            key={item.uniqueKey}
+            className="market-item mb-4 p-4 border rounded-lg"
+          >
+            <h3 className="text-lg font-bold">{item.collateralAsset.name}</h3>
+            <p>存款资产: {item.collateralAsset.name}</p>
+            <MarketButton market={item} />
+          </div>
+        ));
+
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: "assistant",
+            content: "## 可用市场列表\n请选择要操作的市场：",
+          },
+          {
+            role: "assistant",
+            content: <div className="grid gap-4">{marketListContent}</div>,
+          },
+        ]);
+        break;
+      default:
+        return "Unknown step";
     }
+  };
 
   const messagesHandler = async (message: string) => {
     setIsLoading(true);
@@ -136,21 +150,21 @@ export function Chat() {
     try {
       // 调用客户端API 获取数据
       handleStep(message, 0);
-    //   const intent = await intentRecognizer.analyzeIntent(message);
-    //   if (!intent) {
-    //     throw new Error("抱歉，我无法理解您的请求。请换个方式提问。");
-    //   }
+      //   const intent = await intentRecognizer.analyzeIntent(message);
+      //   if (!intent) {
+      //     throw new Error("抱歉，我无法理解您的请求。请换个方式提问。");
+      //   }
 
-    //   const response = await intent.handler(message);
-    //   console.log("response:", response);
-    //   if (!response) {
-    //     throw new Error("处理请求时发生错误");
-    //   }
+      //   const response = await intent.handler(message);
+      //   console.log("response:", response);
+      //   if (!response) {
+      //     throw new Error("处理请求时发生错误");
+      //   }
 
-    //   setMessages((prev) => [
-    //     ...prev,
-    //     { role: "assistant", content: response.describe },
-    //   ]);
+      //   setMessages((prev) => [
+      //     ...prev,
+      //     { role: "assistant", content: response.describe },
+      //   ]);
 
       setInput("");
     } catch (err: any) {
@@ -251,14 +265,14 @@ export function Chat() {
                       }`}
                     >
                       {m.role === "assistant" ? (
-                            typeof m.content === "string" ? (
-                            <ReactMarkdown>{m.content}</ReactMarkdown>
-                            ) : (
-                            m.content
-                            )
+                        typeof m.content === "string" ? (
+                          <ReactMarkdown>{m.content}</ReactMarkdown>
                         ) : (
-                            m.content
-                        )}
+                          m.content
+                        )
+                      ) : (
+                        m.content
+                      )}
                     </div>
                   </div>
                 </li>
@@ -319,6 +333,7 @@ export function Chat() {
                   </>
                 )}
               </Button>
+              {call3s && <CallContract call3data={call3s} />}
             </form>
           </div>
         </div>
