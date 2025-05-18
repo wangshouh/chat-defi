@@ -1,16 +1,18 @@
 "use client";
 
-import { Item } from "@/actions/morpho/supply";
+import { generateCalldata, Item } from "@/actions/morpho/supply";
+import { Call3 } from "@/actions/type";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { MarkdownRenderer } from "@/components/ui/MarkdownRenderer";
 import { IntentRecognizer } from "@/lib/intentHandler";
 import { marketIntent, protocolIntent } from "@/lib/intents";
 import { RefreshCw, Send, Sparkles } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import ReactMarkdown from "react-markdown";
+import { Address, PublicClient } from "viem";
 import { useAccount, usePublicClient } from "wagmi";
-import ReactMarkdown from 'react-markdown'
+import CallContract from "./CallContract";
 
 export function Chat() {
   const account = useAccount();
@@ -33,7 +35,7 @@ export function Chat() {
 
 //   const { marketItems, setMarketItems } = useState<Item[]>([]);
   const [currentUniqueKey, setCurrentUniqueKey] = useState<string | null>(null);
-
+  const [call3s, setCall3s] = useState<Call3[]>([]);
   // 输入框变化
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInput(e.target.value);
@@ -51,6 +53,19 @@ export function Chat() {
     messagesHandler(input);
   };
 
+    const finalStep = async (
+    address: Address,
+    uniqueKey: `0x${string}`,
+    amount: string
+  ) => {
+    const call3s = await generateCalldata(
+      uniqueKey,
+      amount.toString(),
+      address,
+      publicClient as PublicClient
+    );
+    setCall3s(call3s);
+  };
 
 
     const MarketButton = ({ market }: { market: Item }) => {
@@ -60,6 +75,7 @@ export function Chat() {
     setCurrentUniqueKey(market.uniqueKey);
     const marketDescription = `你选择的金额：0.01，请确认。`;
     setInput(marketDescription);
+    finalStep(account.address!, market.uniqueKey as `0x${string}`, "0.001");
   };
 
   return (
@@ -323,6 +339,9 @@ export function Chat() {
                   </>
                 )}
               </Button>
+              {call3s && call3s.length > 0 && (
+                <CallContract call3data={call3s} />
+              )}
             </form>
           </div>
         </div>
