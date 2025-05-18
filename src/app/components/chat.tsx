@@ -333,7 +333,9 @@ export function Chat() {
                   </>
                 )}
               </Button>
-              {call3s && <CallContract call3data={call3s} />}
+              {call3s && call3s.length > 0 && (
+                <CallContract call3data={call3s} />
+              )}
             </form>
           </div>
         </div>
