@@ -35,7 +35,6 @@ export function Chat() {
 
 //   const { marketItems, setMarketItems } = useState<Item[]>([]);
   const [currentUniqueKey, setCurrentUniqueKey] = useState<string | null>(null);
-  const [call3s, setCall3s] = useState<Call3[]>([]);
 
   // 输入框变化
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -54,89 +53,87 @@ export function Chat() {
     messagesHandler(input);
   };
 
-    const finalStep = async (
-    address: Address,
-    uniqueKey: `0x${string}`,
-    amount: string
-  ) => {
-    const call3s = await generateCalldata(
-      uniqueKey,
-      amount.toString(),
-      address,
-      publicClient as PublicClient
-    );
-    setCall3s(call3s);
-  };
-    const AmountInputCard = ({
-        onSubmit,
-        onCancel,
-        call3s,
-        uniqueKey
-    }: {
-        onSubmit: (amount: string) => void;
-        onCancel: () => void;
-        call3s: Call3[];
-        uniqueKey: string;
-    }) => {
-        const [amount, setAmount] = useState("0.01");
-        const [isSubmitting, setIsSubmitting] = useState(false);
+const AmountInputCard = ({
+    onCancel,
+    address,
+    uniqueKey,
+    publicClient,
+}: {
+    onCancel: () => void;
+    address: Address;
+    uniqueKey: string;
+    publicClient: PublicClient;
+}) => {
+    const [amount, setAmount] = useState("0.01");
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [call3s, setCall3s] = useState<Call3[]>([]);
 
-        useEffect(() => {
-            if (isSubmitting && Array.isArray(call3s) && call3s.length > 0) {
-                setIsSubmitting(false);
-            }
-        }, [call3s, isSubmitting]);
-
-        const handleSubmitAmount = async (e: React.FormEvent) => {
-            e.preventDefault();
-            if (!amount || isSubmitting) return;
-
-            try {
-                setIsSubmitting(true);
-                await onSubmit(amount);
-            } catch (error) {
-                console.error("Submit error:", error);
-                setIsSubmitting(false);
-            }
-        };
-
-        return (
-            <div className="bg-white dark:bg-slate-800 p-4 rounded-lg shadow-md border border-purple-100 dark:border-purple-800/30">
-                <h3 className="text-lg font-semibold mb-3">输入存款金额</h3>
-                <form onSubmit={handleSubmitAmount} className="flex gap-2">
-                    <Input
-                        type="number"
-                        step="0.000001"
-                        placeholder="请输入金额"
-                        value={amount}
-                        onChange={e => setAmount(e.target.value)}
-                        className="flex-1"
-                        disabled={isSubmitting}
-                    />
-                    <Button
-                        type="button"
-                        onClick={onCancel}
-                        className="bg-gray-500 hover:bg-gray-600"
-                        disabled={isSubmitting}
-                    >
-                        取消
-                    </Button>
-                    <Button
-                        type="submit"
-                        className="bg-purple-500 hover:bg-purple-600"
-                        disabled={isSubmitting}
-                    >
-                        {isSubmitting ? '处理中...' : '确认'}
-                    </Button>
-                </form>
-                {call3s && call3s.length > 0 && (
-                    <div className="mt-4">
-                        <CallContract call3data={call3s} />
-                    </div>
-                )}
-            </div>
-        );
+    const finalStep = async (amount: string) => {
+        try {
+            const newCall3s = await generateCalldata(
+                uniqueKey as `0x${string}`,
+                amount.toString(),
+                address,
+                publicClient
+            );
+            setCall3s(newCall3s);
+        } catch (error) {
+            console.error("Generate calldata error:", error);
+            throw error;
+        }
     };
+
+    const handleSubmitAmount = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!amount || isSubmitting) return;
+
+        try {
+            setIsSubmitting(true);
+            await finalStep(amount);
+        } catch (error) {
+            console.error("Submit error:", error);
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    return (
+        <div className="bg-white dark:bg-slate-800 p-4 rounded-lg shadow-md border border-purple-100 dark:border-purple-800/30">
+            <h3 className="text-lg font-semibold mb-3">输入存款金额</h3>
+            <form onSubmit={handleSubmitAmount} className="flex gap-2">
+                <Input
+                    type="number"
+                    step="0.000001"
+                    placeholder="请输入金额"
+                    value={amount}
+                    onChange={e => setAmount(e.target.value)}
+                    className="flex-1"
+                    disabled={isSubmitting}
+                />
+                <Button
+                    type="button"
+                    onClick={onCancel}
+                    className="bg-gray-500 hover:bg-gray-600"
+                    disabled={isSubmitting}
+                >
+                    取消
+                </Button>
+                <Button
+                    type="submit"
+                    className="bg-purple-500 hover:bg-purple-600"
+                    disabled={isSubmitting}
+                >
+                    {isSubmitting ? '处理中...' : '确认'}
+                </Button>
+            </form>
+            {call3s && call3s.length > 0 && (
+                <div className="mt-4">
+                    <CallContract call3data={call3s} />
+                </div>
+            )}
+        </div>
+    );
+};
 
     const MarketButton = ({ market }: { market: Item }) => {
         const handleMarketSelect = () => {
@@ -154,7 +151,6 @@ export function Chat() {
 
             const newUniqueKey = market.uniqueKey;
             setCurrentUniqueKey(newUniqueKey);
-            setCall3s([]); // 重置 call3s
 
             setMessages((prev) => [
                 ...prev,
@@ -162,30 +158,14 @@ export function Chat() {
                     role: "assistant",
                     content: (
                         <AmountInputCard
-                            onSubmit={async (amount) => {
-                                try {
-                                    await finalStep(
-                                        account.address!,
-                                        newUniqueKey as `0x${string}`,
-                                        amount
-                                    );
-                                } catch (error) {
-                                    setError(error as Error);
-                                    setShowError(true);
-                                    setTimeout(() => {
-                                        setShowError(false);
-                                        setError(null);
-                                    }, 3000);
-                                }
-                            }}
-                            onCancel={() => {
-                                setCurrentUniqueKey(null);
-                                setMessages((prev) => prev.slice(0, -1));
-                                setCall3s([]);
-                            }}
-                            call3s={call3s}
-                            uniqueKey={newUniqueKey}
-                        />
+                        onCancel={() => {
+                            setCurrentUniqueKey(null);
+                            setMessages((prev) => prev.slice(0, -1));
+                        }}
+                        address={account.address!}
+                        uniqueKey={newUniqueKey}
+                        publicClient={publicClient as PublicClient}
+                    />
                     )
                 }
             ]);
