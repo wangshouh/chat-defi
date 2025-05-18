@@ -19,8 +19,8 @@ export function Chat() {
 
   // 聊天消息
   const [messages, setMessages] = useState<
-    { role: "user" | "assistant"; content: string }[]
-  >([]);
+  { role: "user" | "assistant"; content: string | React.ReactNode }[]
+>([]);
   // 输入框内容
   const [input, setInput] = useState("");
   // 是否加载中
@@ -50,10 +50,26 @@ export function Chat() {
     messagesHandler(input);
   };
 
-  const handleMarketSelect = (market: Item) => {
+
+
+    const MarketButton = ({ market }: { market: Item }) => {
+  const handleMarketSelect = () => {
     console.log("Selected market:", market);
+    // 这里添加选择市场后的逻辑
+  };
+
+  return (
+    <Button 
+      onClick={handleMarketSelect}
+      className="bg-purple-500 hover:bg-purple-600 text-white p-2 rounded"
+    >
+      选择此市场
+    </Button>
+  );
+};
+
+
     
-    };
 
 
 
@@ -89,29 +105,26 @@ export function Chat() {
                     ...prev,
                     { role: "assistant", content: response2.describe },
                 ]);
-                const marketList = response2.data.map((item: Item) => (
-                    <div
-                        key={item.uniqueKey}
-                        className="p-4 mb-2 border rounded-lg hover:bg-purple-50 dark:hover:bg-purple-900/20 cursor-pointer transition-colors"
-                        onClick={() => handleMarketSelect(item)}
-                    >
-                        <div className="text-sm text-gray-600 dark:text-gray-300">
-                            <div>collateralAsset Name: {item.collateralAsset.name}%</div>
-                        </div>
+                const marketListContent = response2.data.map((item: Item) => (
+                    <div key={item.uniqueKey} className="market-item mb-4 p-4 border rounded-lg">
+                        <h3 className="text-lg font-bold">{item.collateralAsset.name}</h3>
+                        <p>存款资产: {item.collateralAsset.name}</p>
+                        <p>Token 地址: {item.uniqueKey}</p>
+                        <MarketButton market={item} />
                     </div>
-                ));
+                    ));
 
                 setMessages((prev) => [
                     ...prev,
                     {
                         role: "assistant",
-                        content: `
-                        <div class="grid gap-2">
-                        <h2 class="text-lg font-semibold mb-2">市场列表</h2>
-                        ${marketList}
-                        </div>`
+                        content: "## 可用市场列表\n请选择要操作的市场："
                     },
-                ]);
+                    {
+                        role: "assistant",
+                        content: <div className="grid gap-4">{marketListContent}</div>
+                    }
+                    ]);
                 break;
             default:
                 return "Unknown step";
@@ -239,10 +252,14 @@ export function Chat() {
                       }`}
                     >
                       {m.role === "assistant" ? (
-                        <ReactMarkdown >{ m.content}</ReactMarkdown>
-                      ) : (
-                        m.content
-                      )}
+                            typeof m.content === "string" ? (
+                            <ReactMarkdown>{m.content}</ReactMarkdown>
+                            ) : (
+                            m.content
+                            )
+                        ) : (
+                            m.content
+                        )}
                     </div>
                   </div>
                 </li>
