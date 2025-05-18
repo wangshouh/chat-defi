@@ -109,7 +109,6 @@ export function Chat() {
                     <div key={item.uniqueKey} className="market-item mb-4 p-4 border rounded-lg">
                         <h3 className="text-lg font-bold">{item.collateralAsset.name}</h3>
                         <p>存款资产: {item.collateralAsset.name}</p>
-                        <p>Token 地址: {item.uniqueKey}</p>
                         <MarketButton market={item} />
                     </div>
                     ));
