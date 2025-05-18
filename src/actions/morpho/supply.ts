@@ -59,9 +59,9 @@ export const describeMarket = async (marketData: Item[]) => {
  */
 export const getAndDescribeMorphoMarkets = async () => {
   try {
-    const marketData = await getMorphoMarketByColletral();
-    const data = describeMarket(marketData);
-    return data;
+    const items = await getMorphoMarketByColletral();
+    const describe = await describeMarket(items);
+    return {items, describe};
   } catch (error) {
     console.error("Failed to fetch and describe Morpho markets:", error);
     throw error;

@@ -1,5 +1,6 @@
 "use client";
 
+import { Item } from "@/actions/morpho/supply";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +10,7 @@ import { marketIntent, protocolIntent } from "@/lib/intents";
 import { RefreshCw, Send, Sparkles } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAccount } from "wagmi";
+import ReactMarkdown from 'react-markdown'
 
 export function Chat() {
   const account = useAccount();
@@ -25,6 +27,8 @@ export function Chat() {
 
   const chatParent = useRef<HTMLUListElement>(null);
   const [showError, setShowError] = useState<boolean>(false);
+
+//   const { marketItems, setMarketItems } = useState<Item[]>([]);
 
   // 输入框变化
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -43,6 +47,13 @@ export function Chat() {
     messagesHandler(input);
   };
 
+  const handleMarketSelect = (market: Item) => {
+    console.log("Selected market:", market);
+    
+    };
+
+
+
   // 创建意图识别器实例
   const intentRecognizer = useMemo(() => {
     const recognizer = new IntentRecognizer();
@@ -54,25 +65,77 @@ export function Chat() {
     messagesHandler(example);
   }, []);
 
+    const handleStep = async (message: string, index: number) => {
+        switch (index) {
+            case 0:
+                const intent = await intentRecognizer.analyzeIntent(message);
+                if (!intent) {
+                    throw new Error("抱歉，我无法理解您的请求。请换个方式提问。");
+                }
+                const response = await intent.handler(message);
+                console.log("response:", response);
+                setMessages((prev) => [
+                    ...prev,
+                    { role: "assistant", content: response.describe },
+                ]);
+                const intent2 = await intentRecognizer.analyzeIntent("市场");
+                const response2 = await intent2?.handler("市场");
+                // setMarketItems(response2.data);
+
+                setMessages((prev) => [
+                    ...prev,
+                    { role: "assistant", content: response2.describe },
+                ]);
+                const marketList = response2.data.map((item: Item) => (
+                    <div
+                        key={item.uniqueKey}
+                        className="p-4 mb-2 border rounded-lg hover:bg-purple-50 dark:hover:bg-purple-900/20 cursor-pointer transition-colors"
+                        onClick={() => handleMarketSelect(item)}
+                    >
+                        <div className="text-sm text-gray-600 dark:text-gray-300">
+                            <div>collateralAsset Name: {item.collateralAsset.name}%</div>
+                        </div>
+                    </div>
+                ));
+
+                setMessages((prev) => [
+                    ...prev,
+                    {
+                        role: "assistant",
+                        content: `
+                        <div class="grid gap-2">
+                        <h2 class="text-lg font-semibold mb-2">市场列表</h2>
+                        ${marketList}
+                        </div>`
+                    },
+                ]);
+                break;
+            default:
+                return "Unknown step";
+        }
+    }
+
   const messagesHandler = async (message: string) => {
     setIsLoading(true);
     setMessages((prev) => [...prev, { role: "user", content: message }]);
     try {
       // 调用客户端API 获取数据
-      const intent = await intentRecognizer.analyzeIntent(message);
-      if (!intent) {
-        throw new Error("抱歉，我无法理解您的请求。请换个方式提问。");
-      }
+      handleStep(message, 0);
+    //   const intent = await intentRecognizer.analyzeIntent(message);
+    //   if (!intent) {
+    //     throw new Error("抱歉，我无法理解您的请求。请换个方式提问。");
+    //   }
 
-      const response = await intent.handler(message);
-      if (!response) {
-        throw new Error("处理请求时发生错误");
-      }
+    //   const response = await intent.handler(message);
+    //   console.log("response:", response);
+    //   if (!response) {
+    //     throw new Error("处理请求时发生错误");
+    //   }
 
-      setMessages((prev) => [
-        ...prev,
-        { role: "assistant", content: response },
-      ]);
+    //   setMessages((prev) => [
+    //     ...prev,
+    //     { role: "assistant", content: response.describe },
+    //   ]);
 
       setInput("");
     } catch (err: any) {
@@ -173,7 +236,7 @@ export function Chat() {
                       }`}
                     >
                       {m.role === "assistant" ? (
-                        <MarkdownRenderer content={m.content} />
+                        <ReactMarkdown >{ m.content}</ReactMarkdown>
                       ) : (
                         m.content
                       )}

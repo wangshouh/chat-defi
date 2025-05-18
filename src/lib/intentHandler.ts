@@ -1,19 +1,19 @@
-export interface Intent {
+export interface Intent<T> {
   name: string;
   confidence: number;
-  handler: (message: string) => Promise<string>;
+  handler: (message: string) => Promise<T>;
 }
 
 export class IntentRecognizer {
-  private intents: Intent[] = [];
+  private intents: Intent<any>[] = [];
 
   // 注册意图处理器
-  registerIntent(intent: Intent) {
+  registerIntent(intent: Intent<any>) {
     this.intents.push(intent);
   }
 
   // 分析消息意图
-  async analyzeIntent(message: string): Promise<Intent | null> {
+  async analyzeIntent(message: string): Promise<Intent<any> | null> {
     if (!this.intents.length) {
       return null;
     }
