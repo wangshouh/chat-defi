@@ -1,5 +1,4 @@
-import { getContract } from "viem";
-import { publicClient } from "@/abi/config";
+import { getContract, PublicClient } from "viem";
 
 export const USDCAbi = [
   {
@@ -627,8 +626,10 @@ export const USDCAbi = [
   },
 ] as const;
 
-export const USDC = getContract({
-  address: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
-  abi: USDCAbi,
-  client: publicClient,
-});
+export const USDC = function (publicClient: PublicClient) {
+  return getContract({
+    address: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+    abi: USDCAbi,
+    client: publicClient,
+  });
+};

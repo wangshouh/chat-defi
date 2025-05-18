@@ -1,7 +1,12 @@
 import { MORPHO } from "@/lib/config";
 import { FLASH_MODEL } from "@/lib/openrouter";
 import { generateText } from "ai";
-import { encodeFunctionData, parseUnits, type Address } from "viem";
+import {
+  encodeFunctionData,
+  parseUnits,
+  PublicClient,
+  type Address,
+} from "viem";
 import { morpho, morphoAbi } from "../../abi/morphoAbi";
 import { USDC, USDCAbi } from "../../abi/USDCAbi";
 import type { Call3 } from "../type";
@@ -58,7 +63,7 @@ export const getAndDescribeMorphoMarkets = async () => {
     const data = describeMarket(marketData);
     return data;
   } catch (error) {
-    console.error('Failed to fetch and describe Morpho markets:', error);
+    console.error("Failed to fetch and describe Morpho markets:", error);
     throw error;
   }
 };
@@ -66,12 +71,16 @@ export const getAndDescribeMorphoMarkets = async () => {
 export const generateCalldata = async (
   uniqueKey: `0x${string}`,
   amount: string,
-  walletAddress: Address
+  walletAddress: Address,
+  publicClient: PublicClient
 ) => {
   const call3s = [] as Call3[];
 
   const depositAmount = parseUnits(amount, 6);
-  const usdcAllowance = await USDC.read.allowance([walletAddress, MORPHO]);
+  const usdcAllowance = await USDC(publicClient).read.allowance([
+    walletAddress,
+    MORPHO,
+  ]);
 
   if (usdcAllowance < depositAmount) {
     const allowAction = encodeFunctionData({
@@ -80,13 +89,15 @@ export const generateCalldata = async (
       args: [MORPHO, depositAmount],
     });
     call3s[0] = {
-      target: USDC.address,
+      target: USDC(publicClient).address,
       allowFailure: false,
       callData: allowAction,
     };
   }
 
-  const marketParams = await morpho.read.idToMarketParams([uniqueKey]);
+  const marketParams = await morpho(publicClient).read.idToMarketParams([
+    uniqueKey,
+  ]);
 
   const supplyAction = encodeFunctionData({
     abi: morphoAbi,
@@ -95,7 +106,7 @@ export const generateCalldata = async (
   });
 
   call3s[1] = {
-    target: morpho.address,
+    target: morpho(publicClient).address,
     allowFailure: false,
     callData: supplyAction,
   };
@@ -103,11 +114,12 @@ export const generateCalldata = async (
   return call3s;
 };
 
-export async function generateExampleCalls() {
+export async function generateExampleCalls(publicClient: PublicClient) {
   return await generateCalldata(
     "0xdb0bc9f10a174f29a345c5f30a719933f71ccea7a2a75a632a281929bba1b535",
     "0.025",
-    "0x66c27effe528cd25e110d5a5f59538eccd6e7728"
+    "0x66c27effe528cd25e110d5a5f59538eccd6e7728",
+    publicClient
   );
 }
 

@@ -3,13 +3,12 @@
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { RefreshCw, Send, Sparkles } from "lucide-react";
-import { useEffect, useRef, useState, useMemo, useCallback } from "react";
-import { useAccount } from "wagmi";
 import { MarkdownRenderer } from "@/components/ui/MarkdownRenderer";
-import { IntentRecognizer } from '@/lib/intentHandler';
-import { protocolIntent, marketIntent } from '@/lib/intents';
-
+import { IntentRecognizer } from "@/lib/intentHandler";
+import { marketIntent, protocolIntent } from "@/lib/intents";
+import { RefreshCw, Send, Sparkles } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useAccount } from "wagmi";
 
 export function Chat() {
   const account = useAccount();
@@ -50,8 +49,7 @@ export function Chat() {
     recognizer.registerIntent(protocolIntent);
     recognizer.registerIntent(marketIntent);
     return recognizer;
-  }
-  , []);
+  }, []);
   const handleExampleClicked = useCallback((example: string) => {
     messagesHandler(example);
   }, []);
@@ -61,21 +59,21 @@ export function Chat() {
     setMessages((prev) => [...prev, { role: "user", content: message }]);
     try {
       // 调用客户端API 获取数据
-    const intent = await intentRecognizer.analyzeIntent(message);
-    if (!intent) {
-      throw new Error("抱歉，我无法理解您的请求。请换个方式提问。");
-    }
-    
-    const response = await intent.handler(message);
-    if (!response) {
-      throw new Error("处理请求时发生错误");
-    }
-    
-    setMessages((prev) => [
-      ...prev,
-      { role: "assistant", content: response },
-    ]);
-      
+      const intent = await intentRecognizer.analyzeIntent(message);
+      if (!intent) {
+        throw new Error("抱歉，我无法理解您的请求。请换个方式提问。");
+      }
+
+      const response = await intent.handler(message);
+      if (!response) {
+        throw new Error("处理请求时发生错误");
+      }
+
+      setMessages((prev) => [
+        ...prev,
+        { role: "assistant", content: response },
+      ]);
+
       setInput("");
     } catch (err: any) {
       setError(err);
@@ -167,19 +165,19 @@ export function Chat() {
                                             }
                                         `}
                   >
-                    <p
-                        className={`whitespace-pre-wrap ${
-                            m.role === "user"
-                            ? "text-white"
-                            : "text-slate-800 dark:text-slate-100"
-                        }`}
-                        >
-                        {m.role === 'assistant' ? (
-                            <MarkdownRenderer content={m.content} />
-                        ) : (
-                            m.content
-                        )}
-                        </p>
+                    <div
+                      className={`whitespace-pre-wrap ${
+                        m.role === "user"
+                          ? "text-white"
+                          : "text-slate-800 dark:text-slate-100"
+                      }`}
+                    >
+                      {m.role === "assistant" ? (
+                        <MarkdownRenderer content={m.content} />
+                      ) : (
+                        m.content
+                      )}
+                    </div>
                   </div>
                 </li>
               ))

@@ -1,5 +1,4 @@
-import { getContract } from "viem";
-import { publicClient } from "./config";
+import { getContract, PublicClient } from "viem";
 
 export const morphoAbi = [
   {
@@ -439,8 +438,10 @@ export const morphoAbi = [
   },
 ] as const;
 
-export const morpho = getContract({
-  address: "0xBBBBBbbBBb9cC5e90e3b3Af64bdAF62C37EEFFCb",
-  abi: morphoAbi,
-  client: publicClient,
-});
+export const morpho = function (publicClient: PublicClient) {
+  return getContract({
+    address: "0xBBBBBbbBBb9cC5e90e3b3Af64bdAF62C37EEFFCb",
+    abi: morphoAbi,
+    client: publicClient,
+  });
+};
