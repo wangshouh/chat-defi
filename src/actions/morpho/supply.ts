@@ -61,7 +61,7 @@ export const getAndDescribeMorphoMarkets = async () => {
   try {
     const items = await getMorphoMarketByColletral();
     const describe = await describeMarket(items);
-    return {items, describe};
+    return { items, describe };
   } catch (error) {
     console.error("Failed to fetch and describe Morpho markets:", error);
     throw error;
@@ -72,7 +72,7 @@ export const generateCalldata = async (
   uniqueKey: `0x${string}`,
   amount: string,
   walletAddress: Address,
-  publicClient: PublicClient
+  publicClient: PublicClient,
 ) => {
   const call3s = [] as Call3[];
 
@@ -88,11 +88,11 @@ export const generateCalldata = async (
       functionName: "approve",
       args: [MORPHO, depositAmount],
     });
-    call3s[0] = {
+    call3s.push({
       target: USDC(publicClient).address,
       allowFailure: false,
       callData: allowAction,
-    };
+    });
   }
 
   const marketParams = await morpho(publicClient).read.idToMarketParams([
@@ -105,11 +105,11 @@ export const generateCalldata = async (
     args: [marketParams, depositAmount, 0n, walletAddress, "0x"],
   });
 
-  call3s[1] = {
+  call3s.push({
     target: morpho(publicClient).address,
     allowFailure: false,
     callData: supplyAction,
-  };
+  });
 
   return call3s;
 };
@@ -119,7 +119,7 @@ export async function generateExampleCalls(publicClient: PublicClient) {
     "0xdb0bc9f10a174f29a345c5f30a719933f71ccea7a2a75a632a281929bba1b535",
     "0.025",
     "0x66c27effe528cd25e110d5a5f59538eccd6e7728",
-    publicClient
+    publicClient,
   );
 }
 
