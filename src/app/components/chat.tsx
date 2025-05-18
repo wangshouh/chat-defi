@@ -8,10 +8,13 @@ import { IntentRecognizer } from "@/lib/intentHandler";
 import { marketIntent, protocolIntent } from "@/lib/intents";
 import { RefreshCw, Send, Sparkles } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useAccount } from "wagmi";
+import { useAccount, usePublicClient } from "wagmi";
 
 export function Chat() {
   const account = useAccount();
+
+  const publicClient = usePublicClient();
+
   // 聊天消息
   const [messages, setMessages] = useState<
     { role: "user" | "assistant"; content: string }[]
