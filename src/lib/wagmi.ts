@@ -1,9 +1,10 @@
 import { createConfig, http, type Config } from "wagmi";
-import { base } from "wagmi/chains";
+import { base, bsc } from "wagmi/chains";
 
 export const config: Config = createConfig({
-  chains: [base],
+  chains: [base, bsc],
   transports: {
+    [bsc.id]: http(),
     [base.id]: http(),
   },
 });
